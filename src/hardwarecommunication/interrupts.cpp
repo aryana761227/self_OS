@@ -1,8 +1,15 @@
-#include "interrupts.h"
+
+#include <hardwarecommunication/interrupts.h>
+using namespace myos::common;
+using namespace myos::hardwarecommunication;
 
 
 void printf(char* str);
 void printfHex(uint8_t);
+
+
+
+
 
 InterruptHandler::InterruptHandler(InterruptManager* interruptManager, uint8_t InterruptNumber)
 {
@@ -22,8 +29,18 @@ uint32_t InterruptHandler::HandleInterrupt(uint32_t esp)
     return esp;
 }
 
+
+
+
+
+
+
+
+
+
 InterruptManager::GateDescriptor InterruptManager::interruptDescriptorTable[256];
 InterruptManager* InterruptManager::ActiveInterruptManager = 0;
+
 
 
 
@@ -144,9 +161,7 @@ void InterruptManager::Deactivate()
     if(ActiveInterruptManager == this)
     {
         ActiveInterruptManager = 0;
-        
         asm("cli");
-        
     }
 }
 
@@ -154,10 +169,9 @@ uint32_t InterruptManager::HandleInterrupt(uint8_t interrupt, uint32_t esp)
 {
     if(ActiveInterruptManager != 0)
         return ActiveInterruptManager->DoHandleInterrupt(interrupt, esp);
-
     return esp;
-
 }
+
 
 uint32_t InterruptManager::DoHandleInterrupt(uint8_t interrupt, uint32_t esp)
 {
@@ -181,3 +195,17 @@ uint32_t InterruptManager::DoHandleInterrupt(uint8_t interrupt, uint32_t esp)
 
     return esp;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

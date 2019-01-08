@@ -1,15 +1,24 @@
-#include "types.h"
-#include "gdt.h"
-#include "interrupts.h"
-#include "driver.h"
-#include "keyboard.h"
-#include "mouse.h"
+
+#include <common/types.h>
+#include <gdt.h>
+#include <hardwarecommunication/interrupts.h>
+#include <drivers/driver.h>
+#include <drivers/keyboard.h>
+#include <drivers/mouse.h>
+
+using namespace myos;
+using namespace myos::common;
+using namespace myos::drivers;
+using namespace myos::hardwarecommunication;
+
+
 
 void printf(char* str)
 {
     static uint16_t* VideoMemory = (uint16_t*)0xb8000;
+
     static uint8_t x=0,y=0;
-    
+
     for(int i = 0; str[i] != '\0'; ++i)
     {
         switch(str[i])
@@ -68,12 +77,8 @@ class MouseToConsole : public MouseEventHandler
 {
     int8_t x, y;
 public:
-
+    
     MouseToConsole()
-    {
-    }
-
-    virtual void OnActivate()
     {
         uint16_t* VideoMemory = (uint16_t*)0xb8000;
         x = 40;
@@ -82,7 +87,7 @@ public:
                             | (VideoMemory[80*y+x] & 0xF000) >> 4
                             | (VideoMemory[80*y+x] & 0x00FF);        
     }
-
+    
     virtual void OnMouseMove(int xoffset, int yoffset)
     {
         static uint16_t* VideoMemory = (uint16_t*)0xb8000;
@@ -101,8 +106,16 @@ public:
                             | (VideoMemory[80*y+x] & 0xF000) >> 4
                             | (VideoMemory[80*y+x] & 0x00FF);
     }
-
+    
 };
+
+
+
+
+
+
+
+
 
 typedef void (*constructor)();
 extern "C" constructor start_ctors;
@@ -118,25 +131,26 @@ extern "C" void callConstructors()
 extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot_magic*/)
 {
     printf("Hello World! --- http://www.AlgorithMan.de\n");
+
     GlobalDescriptorTable gdt;
     InterruptManager interrupts(0x20, &gdt);
     
     printf("Initializing Hardware, Stage 1\n");
-
+    
     DriverManager drvManager;
-
+    
         PrintfKeyboardEventHandler kbhandler;
         KeyboardDriver keyboard(&interrupts, &kbhandler);
         drvManager.AddDriver(&keyboard);
-
+    
         MouseToConsole mousehandler;
         MouseDriver mouse(&interrupts, &mousehandler);
         drvManager.AddDriver(&mouse);
-
+        
 
     printf("Initializing Hardware, Stage 2\n");
         drvManager.ActivateAll();
-
+        
     printf("Initializing Hardware, Stage 3\n");
     interrupts.Activate();
 
